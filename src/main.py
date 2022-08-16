@@ -1,86 +1,44 @@
-import tkinter as tk
-from tkinter import messagebox
 import asyncio
 import threading
 
-try:
-    from ctypes import windll
+from server_runner import ServerRunner
+from gui import GUI
 
-    windll.shcore.SetProcessDpiAwareness(1)
-finally:
-    pass
-
-from shell import ServerShell
-
-window = tk.Tk()
-
-shell = ServerShell()
 
 def main():
-    button_start = tk.Button(
-        text="RUN",
-        width=15,
-        height=5,
-        bg="black",
-        fg="white",
-    )
+    server_runner = ServerRunner()
+    gui = GUI(lambda self: start(server_runner),
+              lambda self: stop(server_runner, self),
+              lambda self, command: input(server_runner, command),
+              lambda self: close(server_runner, self))
 
-    button_stop = tk.Button(
-        text="STOP",
-        width=15,
-        height=5,
-        bg="black",
-        fg="white",
-    )
+    server_runner.new_line_action = gui.new_line_action
 
-    button_help = tk.Button(
-        text="HELP",
-        width=15,
-        height=5,
-        bg="black",
-        fg="white",
-    )
-
-    entry = tk.Entry()
-
-    button_start.bind("<Button-1>", lambda event: handle_start())
-    button_stop.bind('<Button-1>', lambda event: handle_stop())
-    button_help.bind('<Button-1>', lambda event: handle_help())
-    window.protocol("WM_DELETE_WINDOW", lambda: handle_close())
-
-    button_start.pack()
-    button_stop.pack()
-    button_help.pack()
-    entry.pack()
-
-    window.mainloop()
+    gui.show()
 
 
-def handle_start():
-    threading.Thread(target=asyncio.run, args=(shell.start(),)).start()
+def start(server_runner: ServerRunner):
+    threading.Thread(target=asyncio.run, args=(server_runner.run(),)).start()
 
 
-def handle_help():
-    if shell.server_working:
-        shell.input('help')
+def stop(server_runner: ServerRunner, gui: GUI):
+    if server_runner.is_working:
+        server_runner.stop()
     else:
-        messagebox.showinfo("Help", "Server is stopped!")
+        gui.show_message("Stop", "Server is already stopped!")
 
 
-def handle_stop():
-    if shell.server_working:
-        shell.stop()
+def close(server_runner: ServerRunner, gui: GUI):
+    if server_runner.is_working:
+        if gui.show_message("Exit", "Do you want to exit?"):
+            server_runner.stop()  # TODO: async
+            gui.close()
     else:
-        messagebox.showinfo("Stop", "Server is already stopped!")
+        gui.close()
 
 
-def handle_close():
-    if shell.server_working:
-        if messagebox.askokcancel("Exit", "Do you want to exit?"):
-            shell.stop()  # TODO: async
-            window.destroy()
-    else:
-        window.destroy()
+def input(server_runner: ServerRunner, command: str):
+    server_runner.input(command)
 
 
 if __name__ == '__main__':
