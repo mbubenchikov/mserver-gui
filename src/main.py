@@ -7,7 +7,7 @@ from gui import GUI
 
 def main():
     server_runner = ServerRunner()
-    gui = GUI(lambda self: start(server_runner),
+    gui = GUI(lambda self: start(server_runner, self),
               lambda self: stop(server_runner, self),
               lambda self, command: input(server_runner, command),
               lambda self: close(server_runner, self))
@@ -17,8 +17,11 @@ def main():
     gui.show()
 
 
-def start(server_runner: ServerRunner):
-    threading.Thread(target=asyncio.run, args=(server_runner.run(),)).start()
+def start(server_runner: ServerRunner, gui: GUI):
+    if server_runner.is_working:
+        gui.show_message("Run", "Server is already running!")
+    else:
+        threading.Thread(target=asyncio.run, args=(server_runner.run(),)).start()
 
 
 def stop(server_runner: ServerRunner, gui: GUI):
