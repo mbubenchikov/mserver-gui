@@ -1,5 +1,7 @@
 import tkinter as tk
 from tkinter import messagebox
+from tkinter import scrolledtext
+import tkinter.font as tkFont
 from typing import Callable
 
 try:
@@ -21,17 +23,21 @@ class GUI:
         self.close_func = close_func
 
         self.root = tk.Tk()
+        self.root.minsize(1500, 700)
 
-        text_box = tk.Text(self.root, height=30, width=100)
-        text_box.yview_scroll(1, "units")
-        text_box.yview('end')
-        text_box.see("end")
+        console_frame = tk.Frame(self.root)
+        font = tkFont.Font(family='Courier New', weight='bold')
+        text_box = scrolledtext.ScrolledText(console_frame)
+        text_box.configure(font=font)
 
-        entry = tk.Entry(width=100)
+        entry = tk.Entry(console_frame)
         entry.bind('<Return>', lambda event: self._input_text(entry))
+        entry.configure(font=font)
 
-        button_start = tk.Button(text="RUN", width=10, height=5, bg="black", fg="white")
-        button_stop = tk.Button(text="STOP", width=10, height=5, bg="black", fg="white")
+        controls_frame = tk.Frame(self.root)
+        buttons_frame = tk.Frame(controls_frame)
+        button_start = tk.Button(buttons_frame, text="RUN", width=15)
+        button_stop = tk.Button(buttons_frame, text="STOP", width=15)
         button_start.bind("<Button-1>", lambda event: self.start_func(self))
         button_stop.bind('<Button-1>', lambda event: self.stop_func(self))
 
@@ -39,16 +45,22 @@ class GUI:
 
         self.new_line_action = lambda s: self._show_line(s, text_box)
 
-        text_box.pack()
-        entry.pack()
-        button_start.pack()
-        button_stop.pack()
+        console_frame.pack(side='left', fill='both', expand=True)
+        controls_frame.pack(side='right', fill='y')
+        buttons_frame.pack(side='bottom')
+        text_box.pack(side='top', fill='both', expand=True)
+        entry.pack(side='bottom', fill='x')
+        button_start.pack(side='left')
+        button_stop.pack(side='right')
 
     def show(self):
         self.root.mainloop()
 
     def show_message(self, title, message):
         messagebox.showinfo(title, message)
+
+    def ask(self, title, message):
+        return messagebox.askokcancel(title, message)
 
     def close(self):
         self.root.destroy()
@@ -58,5 +70,7 @@ class GUI:
         entry.delete(0, tk.END)
 
     def _show_line(self, line: str, text_box: tk.Text):
-        text_box.insert('end', f'{line}\n')
+        text_box.configure(state='normal')
+        text_box.insert('end', f'\n{line}')
         text_box.see('end')
+        text_box.configure(state='disabled')

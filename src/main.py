@@ -33,7 +33,7 @@ def stop(server_runner: ServerRunner, gui: GUI):
 
 def close(server_runner: ServerRunner, gui: GUI):
     if server_runner.is_working:
-        if gui.show_message("Exit", "Do you want to exit?"):
+        if gui.ask("Exit", "Do you want to exit?"):
             server_runner.stop()  # TODO: async
             gui.close()
     else:
